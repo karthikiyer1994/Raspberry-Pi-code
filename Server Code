@@ -40,8 +40,6 @@ char compared_received_string(char (*arr)[COLS])
                        j++;
                        string_counter++;
                  }
-              // if((receive_buffer[j]==(*arr)[j])||(string_counter >= string_no))
-              // if(((*arr)[j]) == '\0' && buffer[j] < 30)
                  if(((*arr)[j]) == '\0' )
                        return i;
                  else
