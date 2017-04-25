@@ -1,0 +1,305 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <time.h>
+*/
+#include <wiringPi.h>
+#include <pcf8574.h>
+#include <lcd.h>
+//#include "lcd_alt.h"
+
+// Defines for the Adafruit Pi LCD interface board
+
+#define	AF_BASE		100
+
+#define	AF_E		(AF_BASE + 7)
+#define	AF_RS		(AF_BASE + 4)
+
+#define	AF_DB4		(AF_BASE + 0)
+#define	AF_DB5		(AF_BASE + 1)
+#define	AF_DB6		(AF_BASE + 2)
+#define	AF_DB7		(AF_BASE + 3)
+
+#define UP_SCROL_ADDRESS	0
+#define DOWN_SCROL_ADDRESS	1
+#define SCROL_ADDRESS		2
+#define CHECK_BOX_ADDRESS	3
+
+static int lcdHandle ;
+unsigned char bcd_reciept_data[5];
+
+unsigned char message[80];
+unsigned char line = 0;
+unsigned char offset_for_scrolbar = 0;
+unsigned char upper_scrol_disable;
+unsigned char upper_scrol_disable;
+unsigned char lower_scrol_disable;
+
+/********************** LCD Definitions ***********************************/
+
+unsigned char version_menu[32] =      {"Ritesh  EXTC A27"
+				       "Karthik EXTC A28"};
+				                  
+
+unsigned char blank_screen[32] =      {"                "
+                                       "                "};
+
+unsigned char thanks_screen[32] =     {"   * Thank *    "
+			               "    * You *     "};
+
+
+/******************************** LCD Initialize ********************************/
+
+int lcd_init (void)
+{
+
+  wiringPiSetupSys () ;
+  pcf8574Setup (AF_BASE, 0x20) ;
+ 
+  lcdHandle = lcdInit (4, 16, 4, AF_RS, AF_E, AF_DB4,AF_DB5,AF_DB6,AF_DB7, 0,0,0,0) ;
+  if (lcdHandle < 0)
+    {
+      printf ("lcdInit 2 failed\n") ;
+      lcdClear    (lcdHandle) ;
+      return 1 ;
+    }
+  else
+    {
+     lcdClear    (lcdHandle) ;
+     return 0;
+    }
+ }
+
+/*void lcd_print(int x, int y,  char *string)
+{
+  
+  lcdPosition ( 0, x, y) ;
+  lcdPuts (0, string) ;
+ 
+}
+*/
+
+/******************** Write Message Subroutine *********************/
+
+void write_message(unsigned char message[80])
+	{
+	
+	//delay_ms(2);
+
+	lcdPosition ( 0, 0, 0);
+        
+	for(line = 0; line < (16 - offset_for_scrolbar); line++)
+		{
+               
+		lcdPutchar (0, message[line]) ;
+                
+                
+		}
+	if(offset_for_scrolbar)
+		{
+		lcdPutchar(0,CHECK_BOX_ADDRESS);
+		}
+
+	lcdPosition ( 0, 0, 1);
+	for(line = 16; line < (32 - offset_for_scrolbar); line++)
+		{
+                
+		lcdPutchar (0, message[line]) ;
+		}
+	if(offset_for_scrolbar && !upper_scrol_disable)
+		{
+		lcdPutchar(0,UP_SCROL_ADDRESS);
+		}
+	else if(offset_for_scrolbar && upper_scrol_disable)
+		{
+		lcdPutchar(0,SCROL_ADDRESS);
+		}
+
+	lcdPosition ( 0, 0, 2);
+	for(line = 40; line < (60 - offset_for_scrolbar); line++)
+		{
+		lcdPutchar (0, message[line]) ;
+		}
+	if(offset_for_scrolbar)
+		{
+		lcdPutchar(0,SCROL_ADDRESS);
+		}
+
+	lcdPosition ( 0, 0, 3);
+	for(line = 60; line < (80 - offset_for_scrolbar); line++)
+		{
+		lcdPutchar(0, message[line]) ;
+		}
+	if(offset_for_scrolbar && !lower_scrol_disable)
+		{
+		lcdPutchar(0,DOWN_SCROL_ADDRESS);
+		}
+	else if(offset_for_scrolbar && lower_scrol_disable)
+		{
+		lcdPutchar(0,SCROL_ADDRESS);
+		}
+	}
+
+void write_message_que(unsigned char message[80])
+	{
+	
+	//delay_ms(2);
+
+
+	lcdPosition ( 0, 0, 0);
+        
+	for(line = 0; line < (16 - offset_for_scrolbar); line++)
+		{
+               
+		lcdPutchar (0, message[line]) ;
+                
+                
+		}
+	if(offset_for_scrolbar)
+
+		{
+		lcdPutchar(0,CHECK_BOX_ADDRESS);
+		}
+
+
+	lcdPosition ( 0, 0, 3);
+
+	for(line = 60; line < (80 - offset_for_scrolbar); line++)
+		{
+		lcdPutchar(0, message[line]) ;
+		}
+	if(offset_for_scrolbar && !lower_scrol_disable)
+		{
+		lcdPutchar(0,DOWN_SCROL_ADDRESS);
+		}
+	else if(offset_for_scrolbar && lower_scrol_disable)
+		{
+		lcdPutchar(0,SCROL_ADDRESS);
+		}
+	}
+
+void write_message_time(unsigned char message[80])
+	{
+	
+	//delay_ms(2);
+
+
+	lcdPosition ( 0, 0, 0);
+        
+	for(line = 0; line < (16 - offset_for_scrolbar); line++)
+		{
+               
+		lcdPutchar (0, message[line]) ;
+                
+                
+		}
+
+	if(offset_for_scrolbar)
+
+		{
+		lcdPutchar(0,CHECK_BOX_ADDRESS);
+		}
+
+
+	lcdPosition ( 0, 0, 1);
+
+	for(line = 16; line < (32 - offset_for_scrolbar); line++)
+		{
+		lcdPutchar(0, message[line]) ;
+		}
+	if(offset_for_scrolbar && !lower_scrol_disable)
+		{
+		lcdPutchar(0,DOWN_SCROL_ADDRESS);
+		}
+	else if(offset_for_scrolbar && lower_scrol_disable)
+		{
+		lcdPutchar(0,SCROL_ADDRESS);
+		}
+
+        lcdPosition ( 0, 0, 2);
+	for(line = 40; line < (60 - offset_for_scrolbar); line++)
+		{
+		lcdPutchar (0, message[line]) ;
+		}
+	if(offset_for_scrolbar)
+		{
+		lcdPutchar(0,SCROL_ADDRESS);
+		}
+    
+
+	}
+
+void load_display_buffer(unsigned char *massage_poiter)
+	{
+	unsigned char *display_buffer_poiter;
+	unsigned char i;
+	display_buffer_poiter = message;
+	for (i = 0; i < 80; i++)
+		{
+		*display_buffer_poiter = *massage_poiter;
+		massage_poiter ++;
+		display_buffer_poiter ++;
+		}
+
+	}
+
+void HextoBcd4digit(unsigned int hex_data)
+	{
+	unsigned int temp;
+	bcd_reciept_data[0] = 0;
+	bcd_reciept_data[1] = 0;
+	bcd_reciept_data[2] = 0;
+	bcd_reciept_data[3] = 0;
+	bcd_reciept_data[4] = 0;
+	bcd_reciept_data[0] = (hex_data / 10000);//+0x30;
+	temp = hex_data % 10000;
+	bcd_reciept_data[1] = (temp / 1000);//+0x30;
+	temp = temp % 1000;
+	bcd_reciept_data[2] = (temp / 100);//+0x30;
+	temp = temp % 100;
+	bcd_reciept_data[3] = (temp / 10);//+0x30;
+	temp = temp % 10;
+	bcd_reciept_data[4] = temp;//+0x30;
+	}
+
+void HextoBcd4digit_print(unsigned int hex_data,unsigned char pos)
+	{
+	unsigned int x;
+	
+	HextoBcd4digit(hex_data);
+	//lcd_print( 0, 3, (bcd_reciept_data));
+	for(x=0;x<5;x++)
+		message[pos + x] = bcd_reciept_data[4 - x] + 0x30;
+		write_message(message);
+	}
+
+void delay(unsigned int delay_counter)
+	{
+	while(delay_counter--);
+
+    }
+
+void delay_second(unsigned int delay_counter)
+	{
+	while(delay_counter--)
+		{
+		delay(51200);
+		delay(51200);
+		delay(51200);
+		delay(51200);
+		}
+	}
+
+void delay_ms(unsigned int count)		 
+	{  
+    unsigned int i;
+    while(count) 
+		{
+        i = 229; 
+		while(i>0) i--;
+        count--;
+    	}
+	}
+
